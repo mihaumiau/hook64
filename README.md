@@ -1,6 +1,6 @@
 # hook64
 
-singe file eat hook impl for x64 windows.
+powerful eat hook impl for x64 windows.
 
 ## usage:
 
