@@ -62,9 +62,6 @@ hook_status hook_module(unsigned short* module_name, hook_detour_entry detours[]
 
         memcpy((char*)code_cave + detour_index * sizeof(jumper), jumper, sizeof(jumper));
 
-        IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)module;
-        IMAGE_NT_HEADERS* nt_headers = (IMAGE_NT_HEADERS*)((char*)module + dos_header->e_lfanew);
-
         IMAGE_DATA_DIRECTORY data_dir = nt_headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
         IMAGE_EXPORT_DIRECTORY* exports = (IMAGE_EXPORT_DIRECTORY*)((char*)module + data_dir.VirtualAddress);
 
