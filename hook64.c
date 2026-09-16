@@ -76,6 +76,10 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
 
         int found = 0;
 
+        DWORD eat_protect = 0;
+
+        VirtualProtect(functions, exports->NumberOfFunctions * sizeof(DWORD), PAGE_READWRITE, &eat_protect);
+
         for (DWORD new_offset = (char*)code_cave - (char*)module + detour_index * sizeof(jumper), i = 0; i < exports->NumberOfNames; i++) {
             if (strcmp((char*)((char*)module + names[i]), detours[detour_index].fun_name) == 0) {
                 if (detours[detour_index].orginal) {
@@ -84,18 +88,13 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
                     return HOOK_INVALID_WRITEBACK;
                 }
 
-                DWORD eat_protect = 0;
-
-                VirtualProtect(&functions[ordinals[i]], sizeof(DWORD), PAGE_READWRITE, &eat_protect);
-
                 functions[ordinals[i]] = new_offset;
-
-                VirtualProtect(&functions[ordinals[i]], sizeof(DWORD), eat_protect, &eat_protect);
-
                 found = 1;
                 break;
             }
         }
+
+        VirtualProtect(functions, exports->NumberOfFunctions * sizeof(DWORD), eat_protect, &eat_protect);
 
         if (!found) {
             return HOOK_UNKNOWN_FUN;
