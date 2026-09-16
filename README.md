@@ -45,10 +45,3 @@ void place_hook64() {
     }
 }
 ```
-
-## benefits:
-
-```
-- lightweight
-- easy to modify
-```
