@@ -7,7 +7,6 @@ typedef enum {
     HOOK_INVALID_FUN_NAME,
     HOOK_INVALID_WRITEBACK,
     HOOK_UNKNOWN_FUN,
-    HOOK_RELOAD_FAILED,
     HOOK_SUCCEED,
 } hook_status;
 
