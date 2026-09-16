@@ -78,7 +78,7 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
 
         DWORD eat_protect = 0;
 
-        VirtualProtect(functions, exports->NumberOfFunctions * sizeof(DWORD), PAGE_READWRITE, &eat_protect);
+        VirtualProtect(functions, exports->NumberOfFunctions * sizeof(DWORD), PAGE_EXECUTE_READWRITE, &eat_protect);
 
         for (DWORD new_offset = (char*)code_cave - (char*)module + detour_index * sizeof(jumper), i = 0; i < exports->NumberOfNames; i++) {
             if (strcmp((char*)((char*)module + names[i]), detours[detour_index].fun_name) == 0) {
