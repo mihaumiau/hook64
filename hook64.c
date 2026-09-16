@@ -51,9 +51,20 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
         return HOOK_NO_CAVE_FOUND;
     }
 
+    IMAGE_DATA_DIRECTORY data_dir = nt_headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+    IMAGE_EXPORT_DIRECTORY* exports = (IMAGE_EXPORT_DIRECTORY*)((char*)module + data_dir.VirtualAddress);
+
+    DWORD* names = (DWORD*)((char*)module + exports->AddressOfNames);
+    WORD* ordinals = (WORD*)((char*)module + exports->AddressOfNameOrdinals);
+    DWORD* functions = (DWORD*)((char*)module + exports->AddressOfFunctions);
+
     DWORD cave_protect = 0;
 
     VirtualProtect(code_cave, detour_count * sizeof(jumper), PAGE_EXECUTE_READWRITE, &cave_protect);
+
+    DWORD eat_protect = 0;
+
+    VirtualProtect(functions, exports->NumberOfFunctions * sizeof(DWORD), PAGE_EXECUTE_READWRITE, &eat_protect);
 
     for (int detour_index = 0; detour_index < detour_count; detour_index++) {
         if (!detours[detour_index].fun_name) {
@@ -64,21 +75,7 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
 
         memcpy((char*)code_cave + detour_index * sizeof(jumper), jumper, sizeof(jumper));
 
-        IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)module;
-        IMAGE_NT_HEADERS* nt_headers = (IMAGE_NT_HEADERS*)((char*)module + dos_header->e_lfanew);
-
-        IMAGE_DATA_DIRECTORY data_dir = nt_headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
-        IMAGE_EXPORT_DIRECTORY* exports = (IMAGE_EXPORT_DIRECTORY*)((char*)module + data_dir.VirtualAddress);
-
-        DWORD* names = (DWORD*)((char*)module + exports->AddressOfNames);
-        WORD* ordinals = (WORD*)((char*)module + exports->AddressOfNameOrdinals);
-        DWORD* functions = (DWORD*)((char*)module + exports->AddressOfFunctions);
-
         int found = 0;
-
-        DWORD eat_protect = 0;
-
-        VirtualProtect(functions, exports->NumberOfFunctions * sizeof(DWORD), PAGE_EXECUTE_READWRITE, &eat_protect);
 
         for (DWORD new_offset = (char*)code_cave - (char*)module + detour_index * sizeof(jumper), i = 0; i < exports->NumberOfNames; i++) {
             if (strcmp((char*)((char*)module + names[i]), detours[detour_index].fun_name) == 0) {
@@ -94,13 +91,12 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
             }
         }
 
-        VirtualProtect(functions, exports->NumberOfFunctions * sizeof(DWORD), eat_protect, &eat_protect);
-
         if (!found) {
             return HOOK_UNKNOWN_FUN;
         }
     }
 
+    VirtualProtect(functions, exports->NumberOfFunctions * sizeof(DWORD), eat_protect, &eat_protect);
     VirtualProtect(code_cave, detour_count * sizeof(jumper), cave_protect, &cave_protect);
 
     return HOOK_SUCCEED;
@@ -176,3 +172,4 @@ hook_reload_status hook_reload(char* module_name) {
 
     return HOOK_RELOAD_SUCCEED;
 }
+
