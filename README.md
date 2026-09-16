@@ -2,7 +2,7 @@
 
 powerful eat hook impl for x64 windows.
 
-## explaination:
+## functions:
 
 ```
 hook_module(): places hooks on module exports
