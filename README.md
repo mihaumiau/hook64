@@ -2,6 +2,13 @@
 
 powerful eat hook impl for x64 windows.
 
+## explaination:
+
+```
+hook_module(): places hooks on module exports
+hook_reload(): updates already resolved imports from modules in module list
+```
+
 ## usage:
 
 ```
@@ -19,7 +26,7 @@ void place_hook64() {
         {"NtQueryDirectoryFileEx", NtQueryDirectoryFileExHook, (void**)&OriginalNtQueryDirectoryFileEx},
     };
     
-    switch (hook_module(L"ntdll.dll", detours, sizeof(detours) / sizeof(hook_detour_entry))) {
+    switch (hook_module("ntdll.dll", detours, sizeof(detours) / sizeof(hook_detour_entry))) {
         case HOOK_SUCCEED:
         case HOOK_INVALID_MOD_NAME:
         case HOOK_UNKNOWN_MOD:
@@ -27,6 +34,13 @@ void place_hook64() {
         case HOOK_INVALID_FUN_NAME:
         case HOOK_UNKNOWN_FUN:
         case HOOK_INVALID_WRITEBACK:
+            break;
+    }
+
+    switch (hook_reload("ntdll.dll")) {
+        case HOOK_RELOAD_FAILED_SNAPSHOT:
+        case HOOK_RELOAD_NO_MODULES:
+        case HOOK_RELOAD_SUCCEED:
             break;
     }
 }
