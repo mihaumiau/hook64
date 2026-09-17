@@ -109,7 +109,7 @@ hook_reload_status hook_reload(char* module_name) {
     );
 
     if (!module_snapshot) {
-        return HOOK_RELOAD_FAILED_SNAPSHOT;
+        return HOOK_RELOAD_SNAPSHOT_FAILED;
     }
 
     MODULEENTRY32 module_entry = {};
@@ -120,7 +120,11 @@ hook_reload_status hook_reload(char* module_name) {
         return HOOK_RELOAD_NO_MODULES;
     }
 
-    HMODULE module = getModuleHandleA(module_name);
+    HMODULE module = GetModuleHandleA(module_name);
+
+    if (!module) {
+        return HOOK_RELOAD_UNKNOWN_MOD;
+    }
 
     do {
         IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)module_entry.hModule;
