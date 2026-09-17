@@ -115,7 +115,7 @@ hook_reload_status hook_reload(char* module_name) {
     );
 
     if (!module_snapshot) {
-        return HOOK_RELOAD_FAILED_SNAPSHOT;
+        return HOOK_RELOAD_SNAPSHOT_FAILED;
     }
 
     MODULEENTRY32 module_entry = {};
