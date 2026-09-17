@@ -103,6 +103,12 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
 }
 
 hook_reload_status hook_reload(char* module_name) {
+    HMODULE module = GetModuleHandleA(module_name);
+
+    if (!module) {
+        return HOOK_RELOAD_UNKNOWN_MOD;
+    }
+    
     HANDLE module_snapshot = CreateToolhelp32Snapshot(
         TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32,
         GetCurrentProcessId()
@@ -118,12 +124,6 @@ hook_reload_status hook_reload(char* module_name) {
 
     if (!Module32First(module_snapshot, &module_entry)) {
         return HOOK_RELOAD_NO_MODS;
-    }
-
-    HMODULE module = GetModuleHandleA(module_name);
-
-    if (!module) {
-        return HOOK_RELOAD_UNKNOWN_MOD;
     }
 
     do {
