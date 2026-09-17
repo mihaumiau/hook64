@@ -109,7 +109,7 @@ hook_reload_status hook_reload(char* module_name) {
     );
 
     if (!module_snapshot) {
-        return HOOK_RELOAD_SNAPSHOT_FAILED;
+        return HOOK_RELOAD_FAILED_SNAPSHOT;
     }
 
     MODULEENTRY32 module_entry = {};
@@ -117,7 +117,7 @@ hook_reload_status hook_reload(char* module_name) {
     module_entry.dwSize = sizeof(module_entry);
 
     if (!Module32First(module_snapshot, &module_entry)) {
-        return HOOK_RELOAD_NO_MODULES;
+        return HOOK_RELOAD_NO_MODS;
     }
 
     HMODULE module = GetModuleHandleA(module_name);
