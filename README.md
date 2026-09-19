@@ -33,13 +33,12 @@ void place_hook64() {
         case HOOK_NO_CAVE_FOUND:
         case HOOK_INVALID_FUN_NAME:
         case HOOK_UNKNOWN_FUN:
-        case HOOK_INVALID_WRITEBACK:
             break;
     }
 
     switch (hook_reload("ntdll.dll")) {
         case HOOK_RELOAD_FAILED_SNAPSHOT:
-        case HOOK_RELOAD_NO_MODULES:
+        case HOOK_RELOAD_NO_MODS:
         case HOOK_RELOAD_SUCCEED:
             break;
     }
