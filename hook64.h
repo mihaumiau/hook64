@@ -5,7 +5,6 @@ typedef enum {
     HOOK_UNKNOWN_MOD,
     HOOK_NO_CAVE_FOUND,
     HOOK_INVALID_FUN_NAME,
-    HOOK_INVALID_WRITEBACK,
     HOOK_UNKNOWN_FUN,
     HOOK_SUCCEED,
 } hook_status;
@@ -19,9 +18,8 @@ typedef struct {
 hook_status hook_module(char* module_name, hook_detour_entry detours[], int detour_count);
 
 typedef enum {
-    HOOK_RELOAD_UNKNOWN_MOD,
-    HOOK_RELOAD_SNAPSHOT_FAILED,
-    HOOK_RELOAD_NO_MODS,
+    HOOK_RELOAD_FAILED_SNAPSHOT,
+    HOOK_RELOAD_NO_MODULES,
     HOOK_RELOAD_SUCCEED,
 } hook_reload_status;
 
