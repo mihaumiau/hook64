@@ -38,7 +38,7 @@ void place_hook64() {
 
     switch (hook_reload("ntdll.dll")) {
         case HOOK_RELOAD_FAILED_SNAPSHOT:
-        case HOOK_RELOAD_NO_MODS:
+        case HOOK_RELOAD_NO_MODULES:
         case HOOK_RELOAD_SUCCEED:
             break;
     }
