@@ -1,8 +1,4 @@
-#include "../include/hook.h"
-
-#define WIN32_LEAN_AND_MEAN
-
-#include <windows.h>
+#include "hook64.h"
 
 char jumper[] = {
     0x48, 0xB8, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
@@ -24,8 +20,7 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
 
     IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)module;
     IMAGE_NT_HEADERS* nt_headers = (IMAGE_NT_HEADERS*)((char*)module + dos_header->e_lfanew);
-
-    IMAGE_SECTION_HEADER* section_header = (IMAGE_SECTION_HEADER*)((char*)nt_headers + sizeof(IMAGE_NT_HEADERS));
+    IMAGE_SECTION_HEADER* section_header = (IMAGE_SECTION_HEADER*)((char*)&nt_headers->OptionalHeader + nt_headers->FileHeader.SizeOfOptionalHeader);
 
     void* code_cave = NULL;
 
@@ -33,15 +28,6 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
         if (section_header[i].Characteristics & IMAGE_SCN_MEM_EXECUTE) {
             if (section_header[i].Misc.VirtualSize - section_header[i].SizeOfRawData >= detour_count * sizeof(jumper)) {
                 code_cave = (char*)module + section_header[i].VirtualAddress + section_header[i].SizeOfRawData;
-
-                DWORD header_protect = 0;
-
-                VirtualProtect(&section_header[i].SizeOfRawData, sizeof(DWORD), PAGE_READWRITE, &header_protect);
-
-                section_header[i].SizeOfRawData += detour_count * sizeof(jumper);
-
-                VirtualProtect(&section_header[i].SizeOfRawData, sizeof(DWORD), header_protect, &header_protect);
-
                 break;
             }
         }
@@ -78,11 +64,9 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
         int found = 0;
 
         for (DWORD new_offset = (char*)code_cave - (char*)module + detour_index * sizeof(jumper), i = 0; i < exports->NumberOfNames; i++) {
-            if (strcmp((char*)((char*)module + names[i]), detours[detour_index].fun_name) == 0) {
+            if (strcmp((char*)module + names[i], detours[detour_index].fun_name) == 0) {
                 if (detours[detour_index].orginal) {
                     *detours[detour_index].orginal = (char*)module + functions[ordinals[i]];
-                } else {
-                    return HOOK_INVALID_WRITEBACK;
                 }
 
                 functions[ordinals[i]] = new_offset;
@@ -103,19 +87,13 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
 }
 
 hook_reload_status hook_reload(char* module_name) {
-    HMODULE module = GetModuleHandleA(module_name);
-
-    if (!module) {
-        return HOOK_RELOAD_UNKNOWN_MOD;
-    }
-    
     HANDLE module_snapshot = CreateToolhelp32Snapshot(
         TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32,
         GetCurrentProcessId()
     );
 
     if (!module_snapshot) {
-        return HOOK_RELOAD_SNAPSHOT_FAILED;
+        return HOOK_RELOAD_FAILED_SNAPSHOT;
     }
 
     MODULEENTRY32 module_entry = {};
@@ -123,8 +101,10 @@ hook_reload_status hook_reload(char* module_name) {
     module_entry.dwSize = sizeof(module_entry);
 
     if (!Module32First(module_snapshot, &module_entry)) {
-        return HOOK_RELOAD_NO_MODS;
+        return HOOK_RELOAD_NO_MODULES;
     }
+
+    HMODULE module = getModuleHandleA(module_name);
 
     do {
         IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)module_entry.hModule;
@@ -157,13 +137,13 @@ hook_reload_status hook_reload(char* module_name) {
                     continue;
                 }
 
-                for (; original_first_thunk->u1.AddressOfData != 0; original_first_thunk++, first_thunk++) {
-                    if (IMAGE_SNAP_BY_ORDINAL(original_first_thunk->u1.Ordinal)) {
-                        first_thunk->u1.Function = (ULONG_PTR)GetProcAddress(module, MAKEINTRESOURCEA(IMAGE_ORDINAL(original_first_thunk->u1.Ordinal)));
+                for (IMAGE_THUNK_DATA *current_original_thunk = original_first_thunk, *current_thunk = first_thunk; current_original_thunk->u1.AddressOfData != 0; current_original_thunk++, current_thunk++) {
+                    if (IMAGE_SNAP_BY_ORDINAL(current_original_thunk->u1.Ordinal)) {
+                        current_thunk->u1.Function = (ULONG_PTR)GetProcAddress(module, MAKEINTRESOURCEA(IMAGE_ORDINAL(current_original_thunk->u1.Ordinal)));
                     } else {
-                        IMAGE_IMPORT_BY_NAME* import_by_name = (IMAGE_IMPORT_BY_NAME*)((char*)module_entry.hModule + original_first_thunk->u1.AddressOfData);
+                        IMAGE_IMPORT_BY_NAME* import_by_name = (IMAGE_IMPORT_BY_NAME*)((char*)module_entry.hModule + current_original_thunk->u1.AddressOfData);
 
-                        first_thunk->u1.Function = (ULONG_PTR)GetProcAddress(module, import_by_name->Name);
+                        current_thunk->u1.Function = (ULONG_PTR)GetProcAddress(module, import_by_name->Name);
                     }
                 }
 
@@ -176,4 +156,3 @@ hook_reload_status hook_reload(char* module_name) {
 
     return HOOK_RELOAD_SUCCEED;
 }
-
