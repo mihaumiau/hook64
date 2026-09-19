@@ -104,7 +104,7 @@ hook_reload_status hook_reload(char* module_name) {
         return HOOK_RELOAD_NO_MODULES;
     }
 
-    HMODULE module = getModuleHandleA(module_name);
+    HMODULE module = GetModuleHandleA(module_name);
 
     do {
         IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)module_entry.hModule;
