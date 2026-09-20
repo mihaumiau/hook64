@@ -27,18 +27,18 @@ void place_hook64() {
     };
     
     switch (hook_module("ntdll.dll", detours, sizeof(detours) / sizeof(hook_detour_entry))) {
-        case HOOK_SUCCEED:
         case HOOK_INVALID_MOD_NAME:
         case HOOK_UNKNOWN_MOD:
         case HOOK_NO_CAVE_FOUND:
         case HOOK_INVALID_FUN_NAME:
         case HOOK_UNKNOWN_FUN:
+        case HOOK_SUCCEED:
             break;
     }
 
     switch (hook_reload("ntdll.dll")) {
         case HOOK_RELOAD_FAILED_SNAPSHOT:
-        case HOOK_RELOAD_NO_MODULES:
+        case HOOK_RELOAD_NO_MODS:
         case HOOK_RELOAD_SUCCEED:
             break;
     }
