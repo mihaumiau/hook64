@@ -12,7 +12,7 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
         return HOOK_INVALID_MOD_NAME;
     }
 
-    void* module = GetModuleHandleA(module_name);
+    void* module = LoadLibraryA(module_name);
 
     if (!module) {
         return HOOK_UNKNOWN_MOD;
