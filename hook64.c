@@ -26,8 +26,8 @@ hook_status hook_module(char* module_name, hook_detour_entry detours[], int deto
 
     for (int i = 0; i < nt_headers->FileHeader.NumberOfSections; i++) {
         if (section_header[i].Characteristics & IMAGE_SCN_MEM_EXECUTE) {
-            if (section_header[i].Misc.VirtualSize - section_header[i].SizeOfRawData >= detour_count * sizeof(jumper)) {
-                code_cave = (char*)module + section_header[i].VirtualAddress + section_header[i].SizeOfRawData;
+            if (section_header[i].SizeOfRawData - section_header[i].Misc.VirtualSize >= detour_count * sizeof(jumper)) {
+                code_cave = (char*)module + section_header[i].VirtualAddress + section_header[i].Misc.VirtualSize;
                 break;
             }
         }
